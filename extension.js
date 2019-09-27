@@ -1,27 +1,48 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
+const fs = require('fs');
 
-// this method is called when your extension is activated
-// your extension is activated the very first time the command is executed
+
+const convert = {
+	settings2json: function (settings) {
+		let settingsStr = settings.toString();
+		settingsStr = settingsStr.replace(/[.]/g, ';');
+		settingsStr = settingsStr.replace(/[[]/g, '-_');
+		settingsStr = settingsStr.replace(/]/g, '_-');
+		return settingsStr;
+	},
+	json2settings: function (json) {
+		let jsonStr = JSON.stringify(json);
+		jsonStr = jsonStr.replace(/[;]/g, '.');
+		jsonStr = jsonStr.replace(/-_/g, '[');
+		jsonStr = jsonStr.replace(/_-/g, ']');
+		return jsonStr;
+	}
+}
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
 	console.log('Congratulations, your extension "vscode-settings-sync" is now active!');
+	const firebaseConfig = require('./firebase_config.js');
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with  registerCommand
-	// The commandId parameter must match the command field in package.json
 	let disposable = vscode.commands.registerCommand('extension.helloWorld', function () {
-		// The code you place here will be executed every time your command is executed
-
-		// Display a message box to the user
 		vscode.window.showInformationMessage('Hello World!');
+
+		const settingsjson_path = "C:/Users/tinzik/AppData/Roaming/Code/User/settings.json";
+		try {
+			let fb = require('firebase/app');
+			require('firebase/database');
+			let app = fb.initializeApp(firebaseConfig);
+			let database = app.database().ref();
+			database.on('value', function (snap) {
+				fs.writeFile(settingsjson_path, convert.json2settings(snap), function (err) {
+					console.log(err);
+				});
+			});
+		} catch (error) {
+			console.log(error);
+		}
 	});
 
 	context.subscriptions.push(disposable);
@@ -29,7 +50,7 @@ function activate(context) {
 exports.activate = activate;
 
 // this method is called when your extension is deactivated
-function deactivate() {}
+function deactivate() { }
 
 module.exports = {
 	activate,
