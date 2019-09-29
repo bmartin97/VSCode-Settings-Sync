@@ -30,17 +30,23 @@ function activate(context) {
 	let app = fb.initializeApp(firebaseConfig);
 	let database = app.database().ref();
 
-	let settingsjson_path;
+	let settingsjson_path = null;
 
 
 	let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function() {
 		vscode.window.showInputBox().then(res => {
 			settingsjson_path = res;
+			context.subscriptions.push(startRealtimeSync);
 		});
 	})
 
 
 	let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
+		
+		if(!settingsjson_path) {
+			vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');
+			return;
+		}
 		vscode.window.showInformationMessage('Real-time settings sync started!');
 		try {
 			database.on('value', function (snap) {
@@ -53,7 +59,6 @@ function activate(context) {
 		}
 	});
 
-	context.subscriptions.push(startRealtimeSync);
 	context.subscriptions.push(setSettingsJsonPath);
 }
 exports.activate = activate;
