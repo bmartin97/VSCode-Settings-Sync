@@ -25,16 +25,24 @@ const convert = {
 function activate(context) {
 	console.log('Congratulations, your extension "vscode-settings-sync" is now active!');
 	const firebaseConfig = require('./firebase_config.js');
+	let fb = require('firebase/app');
+	require('firebase/database');
+	let app = fb.initializeApp(firebaseConfig);
+	let database = app.database().ref();
 
-	let disposable = vscode.commands.registerCommand('extension.helloWorld', function () {
-		vscode.window.showInformationMessage('Hello World!');
+	let settingsjson_path;
 
-		const settingsjson_path = "C:/Users/tinzik/AppData/Roaming/Code/User/settings.json";
+
+	let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function() {
+		vscode.window.showInputBox().then(res => {
+			settingsjson_path = res;
+		});
+	})
+
+
+	let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
+		vscode.window.showInformationMessage('Real-time settings sync started!');
 		try {
-			let fb = require('firebase/app');
-			require('firebase/database');
-			let app = fb.initializeApp(firebaseConfig);
-			let database = app.database().ref();
 			database.on('value', function (snap) {
 				fs.writeFile(settingsjson_path, convert.json2settings(snap), function (err) {
 					console.log(err);
@@ -45,7 +53,8 @@ function activate(context) {
 		}
 	});
 
-	context.subscriptions.push(disposable);
+	context.subscriptions.push(startRealtimeSync);
+	context.subscriptions.push(setSettingsJsonPath);
 }
 exports.activate = activate;
 

@@ -10,14 +10,19 @@
 		"Other"
 	],
 	"activationEvents": [
-		"onCommand:extension.helloWorld"
+		"onCommand:extension.startRealtimeSync",
+		"onCommand:extension.setSettingsJsonPath"
 	],
 	"main": "./extension.js",
 	"contributes": {
 		"commands": [
 			{
-				"command": "extension.helloWorld",
-				"title": "Hello World"
+				"command": "extension.startRealtimeSync",
+				"title": "Start real-time sync"
+			},
+			{
+				"command": "extension.setSettingsJsonPath",
+				"title": "Set settins.json path"
 			}
 		]
 	},
