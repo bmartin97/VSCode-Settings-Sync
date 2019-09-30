@@ -19,10 +19,17 @@ const convert = {
 	}
 }
 
+
+
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
+	try {
+		vscode.commands.executeCommand('extension.startRealtimeSync');
+	} catch (error) {
+		console.log(error);
+	}
 	let firebaseConfig = null;
 	try {
 		firebaseConfig = require('./firebase_config.js');
@@ -39,13 +46,12 @@ function activate(context) {
 		let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function () {
 			vscode.window.showInputBox().then(res => {
 				settingsjson_path = res;
-				context.subscriptions.push(startRealtimeSync);
 			});
 		})
-
+		
 		let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
 			if (!settingsjson_path) {
-				vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');
+				vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');				
 				return;
 			}
 			vscode.window.showInformationMessage('Real-time settings sync started!');
@@ -55,8 +61,9 @@ function activate(context) {
 				});
 			});
 		});
-
+		
 		context.subscriptions.push(startRealtimeSync);
+		context.subscriptions.push(setSettingsJsonPath);
 	}
 }
 exports.activate = activate;
