@@ -23,43 +23,41 @@ const convert = {
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	console.log('Congratulations, your extension "vscode-settings-sync" is now active!');
-	const firebaseConfig = require('./firebase_config.js');
-	let fb = require('firebase/app');
-	require('firebase/database');
-	let app = fb.initializeApp(firebaseConfig);
-	let database = app.database().ref();
+	let firebaseConfig = null;
+	try {
+		firebaseConfig = require('./firebase_config.js');
+	} catch (err) {
+		vscode.window.showErrorMessage("firebase config not found! (firebase_config.js)");
+	}
 
-	let settingsjson_path = null;
+	if (firebaseConfig) {
+		let fb = require('firebase/app');
+		require('firebase/database');
+		let app = fb.initializeApp(firebaseConfig);
+		let database = app.database().ref();
+		let settingsjson_path = null;
+		let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function () {
+			vscode.window.showInputBox().then(res => {
+				settingsjson_path = res;
+				context.subscriptions.push(startRealtimeSync);
+			});
+		})
 
-
-	let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function() {
-		vscode.window.showInputBox().then(res => {
-			settingsjson_path = res;
-			context.subscriptions.push(startRealtimeSync);
-		});
-	})
-
-
-	let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
-		
-		if(!settingsjson_path) {
-			vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');
-			return;
-		}
-		vscode.window.showInformationMessage('Real-time settings sync started!');
-		try {
+		let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
+			if (!settingsjson_path) {
+				vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');
+				return;
+			}
+			vscode.window.showInformationMessage('Real-time settings sync started!');
 			database.on('value', function (snap) {
 				fs.writeFile(settingsjson_path, convert.json2settings(snap), function (err) {
 					console.log(err);
 				});
 			});
-		} catch (error) {
-			console.log(error);
-		}
-	});
+		});
 
-	context.subscriptions.push(setSettingsJsonPath);
+		context.subscriptions.push(startRealtimeSync);
+	}
 }
 exports.activate = activate;
 
