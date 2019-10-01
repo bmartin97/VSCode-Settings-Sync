@@ -3,6 +3,12 @@ const fs = require('fs');
 
 
 const convert = {
+	/**
+	 * Convert settings.json file to valid JSON format, which firebase can use.
+	 * VSCode uses speciel characters in the settings.json which are not accepted by firebase.
+	 * e.g. [ ] . 
+	 * @param {Object} settings VSCode Settings.json file
+	 */
 	settings2json: function (settings) {
 		let settingsStr = settings.toString();
 		settingsStr = settingsStr.replace(/[.]/g, ';');
@@ -10,6 +16,10 @@ const convert = {
 		settingsStr = settingsStr.replace(/]/g, '_-');
 		return settingsStr;
 	},
+	/**
+	 * Convert backward, from firebase format to VSCode format.
+	 * @param {String} json	Firebase realtime-database data. 
+	 */
 	json2settings: function (json) {
 		let jsonStr = JSON.stringify(json);
 		jsonStr = jsonStr.replace(/[;]/g, '.');
@@ -19,17 +29,14 @@ const convert = {
 	}
 }
 
-
-
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	try {
-		vscode.commands.executeCommand('extension.startRealtimeSync');
-	} catch (error) {
-		console.log(error);
-	}
+	// Start realtime-sync on VSCode start.
+	vscode.commands.executeCommand('extension.startRealtimeSync');
+
+	// Import firebase config file.
 	let firebaseConfig = null;
 	try {
 		firebaseConfig = require('./firebase_config.js');
@@ -42,6 +49,8 @@ function activate(context) {
 		require('firebase/database');
 		let app = fb.initializeApp(firebaseConfig);
 		let database = app.database().ref();
+
+		// Prompts the user for set the path of VSCode settings.json
 		let settingsjson_path = null;
 		let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function () {
 			vscode.window.showInputBox().then(res => {
@@ -49,6 +58,7 @@ function activate(context) {
 			});
 		})
 		
+		// Set realtime synch, and communication with firebase realtime database.
 		let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
 			if (!settingsjson_path) {
 				vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');				
