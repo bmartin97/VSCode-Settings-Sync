@@ -55,13 +55,21 @@ function activate(context) {
 		let setSettingsJsonPath = vscode.commands.registerCommand('extension.setSettingsJsonPath', function () {
 			vscode.window.showInputBox().then(res => {
 				settingsjson_path = res;
+				try {
+					fs.writeFile('path_save.txt', settingsjson_path, function() {
+						console.log("Saved");
+					});
+				} catch (error) {
+					console.log(error);
+				}
+				
 			});
 		})
-		
+
 		// Set realtime synch, and communication with firebase realtime database.
 		let startRealtimeSync = vscode.commands.registerCommand('extension.startRealtimeSync', function () {
 			if (!settingsjson_path) {
-				vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');				
+				vscode.window.showErrorMessage('Please set settings.json path, with "Set settins.json path" command.');
 				return;
 			}
 			vscode.window.showInformationMessage('Real-time settings sync started!');
@@ -71,7 +79,7 @@ function activate(context) {
 				});
 			});
 		});
-		
+
 		context.subscriptions.push(startRealtimeSync);
 		context.subscriptions.push(setSettingsJsonPath);
 	}
